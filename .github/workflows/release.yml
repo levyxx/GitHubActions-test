@@ -1,0 +1,32 @@
+name: Build
+
+on:
+  release:
+    types: [published]
+
+env:
+  GITHUB_TAG: ${{ github.ref_name }}
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Update submodules
+      run: git submodule update --init --recursive
+          
+    - name: Set up AWS CLI
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ap-northeast-1
+      
+    - name: Upload file to S3
+      run: |
+        aws s3 cp ./test.txt s3://sensoriz-dev/software/sensoriz-edge-core
